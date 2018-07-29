@@ -18,7 +18,6 @@ function tail($file)
 {
     $size = 0;
 	$linenum = 0;
-	$currentlinenum = 0;
     while (true) 
 	{
         clearstatcache();		
@@ -30,31 +29,23 @@ function tail($file)
         }
 		
 		$lines = get_lines( get_log_file('%SystemDrive%\inetpub\logs\LogFiles') );
-		$linenum = count($lines);
-		$new = $linenum - $currentlinenum ;
+		$currentlinenum = count($lines);
 		
 		
   
 		$mysqli = new mysqli('hostname', 'user', 'password', 'db');
-		if($mysqli->connect_error || mysqli_connect_error())
+		
+		if($mysqli->connect_error)
 		{
 			$msg = 'Failed to connect to the database. ';
-			if($mysqli->connect_error)
-			{
-				$msg .= '(' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
-			} 
-			else 
-			{
-			$msg .= '(' . mysqli_connect_errno() . ') ' . mysqli_connect_error();
-			}
-			die($msg);
+			exit;
 		}
 		
-		foreach($lines as $line)
+		for($ i = $linenum; i < $linenum; i++)
 		{
-			if (strlen(trim($line)) > 0) 
+			if (strlen(trim($lines[i])) > 0) 
 			{
-				$data = sscanf($line, "%12s:%19[ -~] %s %s %s %s %s - %s %s %s %s %s");
+				$data = sscanf($lines[i], "%12s:%19[ -~] %s %s %s %s %s - %s %s %s %s %s");
 				if(trim($data[5])=="-" || trim($data[5]=="")) 
 				{
 					$data[5] = '';
@@ -64,30 +55,13 @@ function tail($file)
 				$data['4'] = $data[4] . "?" . $data[5];
 				}
 				$qry = sprintf("INSERT INTO iis_logs (`orig_report_file`, `timestamp`, `server_ip`, `request_method`, `server_port`, `client_ip`, `browser_info`, `response`, `num1`, `num2`) VALUES ('%s','%s','%s','%s',%s,'%s','%s',%s,%s,%s)", $mysqli->real_escape_string($data[0]), $data[1], $mysqli->real_escape_string($data[2]),  $mysqli->real_escape_string($data[3]),  $mysqli->real_escape_string($data[6]),  $mysqli->real_escape_string($data[7]),  $mysqli->real_escape_string($data[8]),  $data[9], $data[10], $data[11]);
-				if(!DEBUG) 
-				{
-					$mysqli->real_query($qry);
-				}
-				if ($mysqli->affected_rows > 0 || DEBUG)
-				{
-					$inserted++;
-				}
-				else if ($mysqli->error) 
-				{
-					die("Error (" . $mysqli->errno . ") " . $mysqli->error . "\nQuery used: " . $qry . "\nData used: " . print_r($data, TRUE) . "\nLine used: " . $line ."\nRows inserted: ". $inserted . " out of " . count($processed) . "\n");
-				}
-				$processed[] = $data;
-				if(DEBUG)
-				{
-					if ($data[5]!='')
-					{
-					echo "Row: $line\n" . print_r($data, TRUE) . "\nSQL=\"$qry\"\n";
-					}
-				}
+
+				$mysqli->real_query($qry);
+				
 			}
 		}
 		
-		
+		$linenum = $currentlinenum;
 		$size = $currentSize;
     }
 
