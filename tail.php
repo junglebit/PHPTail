@@ -21,14 +21,14 @@ function tail($file)
     while (true) 
 	{
         clearstatcache();		
-        $currentSize = filesize('%SystemDrive%\inetpub\logs\LogFiles');
+        $currentSize = filesize('$file');
         if ($size == $currentSize) 
 		{
             usleep(60000000);
             continue;
         }
 		
-		$lines = get_lines( get_log_file('%SystemDrive%\inetpub\logs\LogFiles') );
+		$lines = get_lines( get_log_file('$file') );
 		$currentlinenum = count($lines);
 		
 		
@@ -46,15 +46,8 @@ function tail($file)
 			if (strlen(trim($lines[i])) > 0) 
 			{
 				$data = sscanf($lines[i], "%12s:%19[ -~] %s %s %s %s %s - %s %s %s %s %s");
-				if(trim($data[5])=="-" || trim($data[5]=="")) 
-				{
-					$data[5] = '';
-				} 
-				else 
-				{
-				$data['4'] = $data[4] . "?" . $data[5];
-				}
-				$qry = sprintf("INSERT INTO iis_logs (`orig_report_file`, `timestamp`, `server_ip`, `request_method`, `server_port`, `client_ip`, `browser_info`, `response`, `num1`, `num2`) VALUES ('%s','%s','%s','%s',%s,'%s','%s',%s,%s,%s)", $mysqli->real_escape_string($data[0]), $data[1], $mysqli->real_escape_string($data[2]),  $mysqli->real_escape_string($data[3]),  $mysqli->real_escape_string($data[6]),  $mysqli->real_escape_string($data[7]),  $mysqli->real_escape_string($data[8]),  $data[9], $data[10], $data[11]);
+				
+				/*$qry = sprintf("INSERT INTO iis_logs (`timestamp`, `server_ip`, `request_method`, `server_port`, `client_ip`, `browser_info`, `response`, `num1`, `num2`) VALUES ('%s','%s','%s','%s',%s,'%s','%s',%s,%s,%s)", $mysqli->real_escape_string); */
 
 				$mysqli->real_query($qry);
 				
@@ -68,5 +61,5 @@ function tail($file)
 	
 }
 
-tail("file.txt");
+tail("%SystemDrive%\inetpub\logs\LogFiles");
 ?>
